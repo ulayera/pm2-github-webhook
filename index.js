@@ -27,20 +27,29 @@ app.post("/webhooks/github", function (req, res) {
             console.log('Command is supported');
             exec(command, (err, stdout, stderr) => {
                 var dt = new Date();
-                let date = dt.getFullYear() + "/" + (dt.getMonth() + 1) + "/" + dt.getDate();
+                let date = dt.getFullYear() + "-" + (dt.getMonth() + 1) + "-" + dt.getDate();
+                date += "T" + dt.getHours() + ":" + (dt.getMinutes() + 1) + ":" + dt.getSeconds();
                 let path = cwd+'logs/'+repo+'/'+branch+'/';
-                if (err) {
-                    fs.writeFile(path+date+'-err.log', err, (err) => {});
-                    console.error('Error: see ' + path+date+'-err.log');
-                } else {
-                    console.log('Success: see ' + path+date+'-err.log');
-                }
-                if (stdout) {
-                    fs.writeFile(path+date+'-stdout.log', stdout, (err) => {});
-                }
-                if (stderr) {
-                    fs.writeFile(path+date+'-stderr.log', stderr, (err) => {});
-                }
+                exec(`mkdir -p ${path}`, (err, stdout, stderr) => {
+                    if (err) {
+                        fs.writeFile(path+date+'-err.log', err.toString(),
+                            (err) => console.error(err)
+                        );
+                        console.error('Error: see ' + path+date+'-err.log');
+                    } else {
+                        console.log('Success: see ' + path+date+'-stdout.log');
+                    }
+                    if (stdout) {
+                        fs.writeFile(path+date+'-stdout.log', stdout.toString(),
+                            (out) => console.log(out)
+                        );
+                    }
+                    if (stderr) {
+                        fs.writeFile(path+date+'-stderr.log', stderr.toString(),
+                            (err) => console.error(err)
+                        );
+                    }
+                });
             });
         }
         res.sendStatus(200);
